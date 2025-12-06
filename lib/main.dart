@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:online_wedding/features/e_card/domain/usecases/create_new_card_use_case.dart';
 import 'package:online_wedding/features/e_card/data/repositories/e_card_repository_impl.dart';
 import 'package:online_wedding/features/e_card/presentation/pages/create_card_page.dart';
@@ -32,12 +33,18 @@ import 'features/e_card/domain/usecases/list_templates_use_case.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseAppCheck.instance.activate();
+  try {
+    if (!kIsWeb) {
+      await FirebaseAppCheck.instance.activate();
+    }
+  } catch (_) {}
   final firestore = FirebaseFirestore.instance;
-  firestore.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
+  if (!kIsWeb) {
+    firestore.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  }
   runApp(
     ProviderScope(
       overrides: [

@@ -52,13 +52,13 @@ class _AdminWebAuthnGatePageState extends ConsumerState<AdminWebAuthnGatePage> {
     }).toList();
     return m;
   }
-  ByteBuffer _b64ToBuf(String s) {
+  Uint8List _b64ToBuf(String s) {
     String t = s.replaceAll('-', '+').replaceAll('_', '/');
     while (t.length % 4 != 0) {
       t += '=';
     }
     final bytes = base64.decode(t);
-    return Uint8List.fromList(bytes).buffer;
+    return Uint8List.fromList(bytes);
   }
   Map<String, dynamic> _serializeAssertion(Object? cred) {
     final c = cred as html.PublicKeyCredential;

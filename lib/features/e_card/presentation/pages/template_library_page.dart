@@ -126,12 +126,11 @@ class TemplateCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(item.previewUrl),
-                  fit: BoxFit.cover,
-                ),
+            child: ClipRect(
+              child: Image.network(
+                item.previewUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: Colors.black12),
               ),
             ),
           ),

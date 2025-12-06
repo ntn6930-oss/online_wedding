@@ -130,7 +130,11 @@ class _AlbumGrid extends StatelessWidget {
       itemCount: images.length,
       itemBuilder: (_, i) => ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(images[i], fit: BoxFit.cover),
+        child: Image.network(
+          images[i],
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(color: Colors.black12),
+        ),
       ),
     );
   }
