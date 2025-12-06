@@ -5,6 +5,7 @@ import 'package:online_wedding/features/e_card/domain/usecases/get_card_by_id_us
 import 'package:online_wedding/features/e_card/domain/entities/card_customization_entity.dart';
 import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:online_wedding/features/e_card/presentation/widgets/template_factory.dart';
 import '../../domain/usecases/create_new_card_use_case.dart';
 
 class PublicCardPage extends ConsumerWidget {
@@ -73,83 +74,19 @@ class _AnimatedTemplateState extends State<_AnimatedTemplate> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: AnimatedOpacity(
-        opacity: show ? 1 : 0,
-        duration: const Duration(milliseconds: 600),
-        child: _CardContent(
-          card: widget.card,
-          customization: widget.customization,
-          images: widget.images,
-        ),
+    return AnimatedOpacity(
+      opacity: show ? 1 : 0,
+      duration: const Duration(milliseconds: 600),
+      child: TemplateFactory.build(
+        widget.card.templateId,
+        widget.card,
+        widget.customization,
+        widget.images,
       ),
     );
   }
 }
 
-class _CardContent extends StatelessWidget {
-  final WeddingCardEntity card;
-  final CardCustomizationEntity? customization;
-  final List<String> images;
-  const _CardContent({required this.card, this.customization, this.images = const []});
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme;
-    final color = _parseHex(customization?.primaryColorHex ?? '#8E2DE2');
-    TextStyle apply(TextStyle? base) {
-      final f = customization?.font;
-      if (f != null && f.isNotEmpty) {
-        return GoogleFonts.getFont(f, textStyle: base);
-      }
-      return base ?? const TextStyle();
-    }
-    return Container(
-      padding: const EdgeInsets.all(24),
-      constraints: const BoxConstraints(maxWidth: 600),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.7)],
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(card.coupleName, style: apply(style.headlineMedium?.copyWith(color: Colors.white))),
-          const SizedBox(height: 8),
-          Text(card.date.toIso8601String(), style: apply(style.bodyMedium?.copyWith(color: Colors.white70))),
-          const SizedBox(height: 16),
-          Text('Template: ${card.templateId}', style: apply(style.bodyMedium?.copyWith(color: Colors.white))),
-          const SizedBox(height: 8),
-          Text('Card ID: ${card.cardId}', style: apply(style.bodySmall?.copyWith(color: Colors.white70))),
-          if (customization?.showCountdown ?? false) ...[
-            const SizedBox(height: 16),
-            _Countdown(target: card.date, style: apply(style.titleMedium?.copyWith(color: Colors.white))),
-          ],
-          if (customization?.showMap ?? false) ...[
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                final q = Uri.encodeComponent(card.coupleName);
-                final url = 'https://www.google.com/maps/search/?api=1&query=$q';
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(), body: Center(child: Text(url)))));
-              },
-              child: const Text('Xem bản đồ'),
-            ),
-          ],
-          if ((customization?.showAlbum ?? false) && images.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text('Album ảnh', style: apply(style.titleMedium?.copyWith(color: Colors.white))),
-            const SizedBox(height: 8),
-            _AlbumGrid(images: images),
-          ],
-        ],
-      ),
-    );
-  }
-}
 
 final _customProvider = FutureProvider.family<CardCustomizationEntity?, String>((ref, id) async {
   final repo = ref.read(eCardRepositoryProvider);
@@ -217,4 +154,3 @@ Color _parseHex(String hex) {
   final v = int.parse('FF$h', radix: 16);
   return Color(v);
 }
-

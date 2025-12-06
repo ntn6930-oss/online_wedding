@@ -5,6 +5,7 @@ import 'package:online_wedding/features/e_card/data/datasources/card_remote_data
 import 'package:online_wedding/features/e_card/domain/entities/wedding_card_entity.dart';
 import 'package:online_wedding/features/e_card/domain/usecases/create_new_card_use_case.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
   final FirebaseFirestore db;
@@ -12,6 +13,10 @@ class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
 
   @override
   Future<WeddingCardEntity> createCard(CreateNewCardParams params) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) {
+      throw Exception('AUTH_REQUIRED');
+    }
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final data = {
       'cardId': id,
@@ -23,6 +28,7 @@ class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
       'isPublic': false,
       'customization': {},
       'images': [],
+      'ownerUid': uid,
     };
     await db.collection('cards').doc(id).set(data);
     return WeddingCardEntity(
@@ -48,6 +54,59 @@ class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
       storageUrl: m['storageUrl'] as String,
       isPremium: m['isPremium'] as bool,
     );
+  }
+
+  @override
+  Future<List<WeddingCardEntity>> listCardsByOwner(String ownerUid) async {
+    final qs = await db.collection('cards').where('ownerUid', isEqualTo: ownerUid).get();
+    return qs.docs
+        .map((d) {
+          final m = d.data();
+          final dateStr = (m['date'] as String?) ?? DateTime.now().toIso8601String();
+          return WeddingCardEntity(
+            cardId: (m['cardId'] as String?) ?? d.id,
+            templateId: (m['templateId'] as String?) ?? '',
+            coupleName: (m['coupleName'] as String?) ?? '',
+            date: DateTime.tryParse(dateStr) ?? DateTime.now(),
+            storageUrl: (m['storageUrl'] as String?) ?? '',
+            isPremium: (m['isPremium'] as bool?) ?? false,
+          );
+        })
+        .whereType<WeddingCardEntity>()
+        .toList();
+  }
+
+  @override
+  Future<List<WeddingCardEntity>> listCardsByOwnerPaged(
+    String ownerUid,
+    int limit,
+    DateTime? startAfterDate,
+  ) async {
+    Query q = db
+        .collection('cards')
+        .where('ownerUid', isEqualTo: ownerUid)
+        .orderBy('date')
+        .limit(limit);
+    if (startAfterDate != null) {
+      q = q.startAfter([startAfterDate.toIso8601String()]);
+    }
+    final qs = await q.get();
+    return qs.docs
+        .map((d) {
+          final m = d.data();
+          if (m == null) return null;
+          final dateStr = ((m as Map<String, dynamic>)['date'] as String?) ?? DateTime.now().toIso8601String();
+          return WeddingCardEntity(
+            cardId: (m['cardId'] as String?) ?? d.id,
+            templateId: (m['templateId'] as String?) ?? '',
+            coupleName: (m['coupleName'] as String?) ?? '',
+            date: DateTime.tryParse(dateStr) ?? DateTime.now(),
+            storageUrl: (m['storageUrl'] as String?) ?? '',
+            isPremium: (m['isPremium'] as bool?) ?? false,
+          );
+        })
+        .whereType<WeddingCardEntity>()
+        .toList();
   }
 
   @override
@@ -81,16 +140,51 @@ class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
   @override
   Future<List<GuestModel>> listGuests(String cardId) async {
     final qs = await db.collection('cards').doc(cardId).collection('guests').get();
-    return qs.docs.map((d) {
-      final m = d.data();
-      return GuestModel(
-        guestId: m['guestId'] as String,
-        name: m['name'] as String,
-        invited: m['invited'] as bool,
-        attended: m['attended'] as bool,
-        giftAmount: (m['giftAmount'] as num).toDouble(),
-      );
-    }).toList();
+    return qs.docs
+        .map((d) {
+          final m = d.data();
+          return GuestModel(
+            guestId: (m['guestId'] as String?) ?? d.id,
+            name: (m['name'] as String?) ?? '',
+            invited: (m['invited'] as bool?) ?? false,
+            attended: (m['attended'] as bool?) ?? false,
+            giftAmount: ((m['giftAmount'] as num?) ?? 0).toDouble(),
+          );
+        })
+        .whereType<GuestModel>()
+        .toList();
+  }
+
+  @override
+  Future<List<GuestModel>> listGuestsPaged(
+    String cardId,
+    int limit,
+    String? startAfterGuestId,
+  ) async {
+    Query q = db
+        .collection('cards')
+        .doc(cardId)
+        .collection('guests')
+        .orderBy('guestId')
+        .limit(limit);
+    if (startAfterGuestId != null) {
+      q = q.startAfter([startAfterGuestId]);
+    }
+    final qs = await q.get();
+    return qs.docs
+        .map((d) {
+          final m = d.data();
+          if (m == null) return null;
+          return GuestModel(
+            guestId: ((m as Map<String, dynamic>)['guestId'] as String?) ?? d.id,
+            name: (m['name'] as String?) ?? '',
+            invited: (m['invited'] as bool?) ?? false,
+            attended: (m['attended'] as bool?) ?? false,
+            giftAmount: ((m['giftAmount'] as num?) ?? 0).toDouble(),
+          );
+        })
+        .whereType<GuestModel>()
+        .toList();
   }
 
   @override
@@ -125,7 +219,12 @@ class FirestoreCardRemoteDataSource implements CardRemoteDataSource {
 
   @override
   Future<String> uploadImage(String cardId, String fileName, List<int> bytes) async {
-    final ref = FirebaseStorage.instance.ref().child('cards/$cardId/images/$fileName');
+    final doc = await db.collection('cards').doc(cardId).get();
+    final m = doc.data() ?? {};
+    final ownerUid = (m['ownerUid'] as String?) ?? 'unknown';
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('users/$ownerUid/cards/$cardId/images/$fileName');
     await ref.putData(Uint8List.fromList(bytes));
     final url = await ref.getDownloadURL();
     await db.collection('cards').doc(cardId).update({

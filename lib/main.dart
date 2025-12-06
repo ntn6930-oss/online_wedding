@@ -10,11 +10,15 @@ import 'package:online_wedding/features/admin/presentation/pages/admin_dashboard
 import 'package:online_wedding/features/e_card/presentation/pages/template_library_page.dart';
 import 'package:online_wedding/features/e_card/presentation/pages/public_card_slug_page.dart';
 import 'package:online_wedding/features/e_card/presentation/pages/design_customization_page.dart';
+import 'package:online_wedding/features/e_card/presentation/pages/my_cards_page.dart';
 import 'package:online_wedding/features/e_card/data/repositories/template_repository_impl.dart';
 import 'package:online_wedding/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:online_wedding/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:online_wedding/firebase_options.dart';
 import 'package:online_wedding/features/e_card/data/datasources/card_remote_data_source_firestore.dart';
+import 'package:online_wedding/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:online_wedding/features/subscription/data/datasources/subscription_remote_data_source_firestore.dart';
+import 'package:online_wedding/features/subscription/data/repositories/subscription_repository_impl.dart';
 
 import 'features/e_card/domain/usecases/list_templates_use_case.dart';
 
@@ -22,6 +26,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final firestore = FirebaseFirestore.instance;
+  firestore.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
   runApp(
     ProviderScope(
       overrides: [
@@ -29,6 +37,11 @@ Future<void> main() async {
           ECardRepositoryImpl(remote: FirestoreCardRemoteDataSource(firestore)),
         ),
         templateRepositoryProvider.overrideWithValue(TemplateRepositoryImpl()),
+        subscriptionRepositoryProvider.overrideWithValue(
+          SubscriptionRepositoryImpl(
+            remote: FirestoreSubscriptionRemoteDataSource(firestore),
+          ),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -79,6 +92,11 @@ class MyApp extends StatelessWidget {
         if (name == '/design') {
           return MaterialPageRoute(
             builder: (_) => const DesignCustomizationPage(),
+          );
+        }
+        if (name == '/my-cards') {
+          return MaterialPageRoute(
+            builder: (_) => const MyCardsPage(),
           );
         }
         if (parts.length == 2 && parts[0] == 'design') {

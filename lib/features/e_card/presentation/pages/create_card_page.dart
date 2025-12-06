@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_wedding/features/e_card/domain/entities/wedding_card_entity.dart';
 import 'package:online_wedding/features/e_card/domain/usecases/create_new_card_use_case.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 final templateIdProvider = StateProvider<String>((ref) => '');
 final coupleNameProvider = StateProvider<String>((ref) => '');
@@ -68,6 +69,13 @@ class CreateCardPage extends ConsumerWidget {
     }
 
     void submit() {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null || uid.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng đăng nhập để tạo thiệp')),
+        );
+        return;
+      }
       ref.read(createCardControllerProvider.notifier).submit(
             templateId: templateId,
             coupleName: coupleName,

@@ -37,6 +37,32 @@ class SignInPage extends ConsumerWidget {
               },
               child: const Text('Đăng nhập'),
             ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () async {
+                ref.read(_signInStateProvider.notifier).state = const AsyncValue.loading();
+                try {
+                  final auth = ref.read(_authProvider);
+                  final cred = await auth.createUserWithEmailAndPassword(
+                    email: emailCtrl.text.trim(),
+                    password: passCtrl.text,
+                  );
+                  ref.read(_signInStateProvider.notifier).state = AsyncValue.data(cred.user);
+                } catch (e, st) {
+                  ref.read(_signInStateProvider.notifier).state = AsyncValue.error(e, st);
+                }
+              },
+              child: const Text('Đăng kí tài khoản'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () async {
+                final auth = ref.read(_authProvider);
+                await auth.signOut();
+                ref.read(_signInStateProvider.notifier).state = const AsyncValue.data(null);
+              },
+              child: const Text('Đăng xuất'),
+            ),
             const SizedBox(height: 12),
             state.when(
               data: (u) => u == null ? const SizedBox.shrink() : Text('Xin chào ${u.email ?? ''}'),

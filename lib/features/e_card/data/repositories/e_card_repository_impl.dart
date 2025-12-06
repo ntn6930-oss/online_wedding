@@ -39,6 +39,26 @@ class ECardRepositoryImpl implements ECardRepository {
   }
 
   @override
+  Future<Either<Failure, List<WeddingCardEntity>>> listCardsByOwner(String ownerUid) async {
+    try {
+      final list = await remote.listCardsByOwner(ownerUid);
+      return Right(list);
+    } catch (_) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<WeddingCardEntity>>> listCardsByOwnerPaged(String ownerUid, int limit, DateTime? startAfterDate) async {
+    try {
+      final list = await remote.listCardsByOwnerPaged(ownerUid, limit, startAfterDate);
+      return Right(list);
+    } catch (_) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> registerSlug(String slug, String cardId) async {
     try {
       await remote.registerSlug(slug, cardId);
@@ -82,6 +102,27 @@ class ECardRepositoryImpl implements ECardRepository {
   Future<Either<Failure, List<GuestEntity>>> listGuests(String cardId) async {
     try {
       final models = await remote.listGuests(cardId);
+      final guests = models
+          .map(
+            (m) => GuestEntity(
+              guestId: m.guestId,
+              name: m.name,
+              invited: m.invited,
+              attended: m.attended,
+              giftAmount: m.giftAmount,
+            ),
+          )
+          .toList();
+      return Right(guests);
+    } catch (_) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<GuestEntity>>> listGuestsPaged(String cardId, int limit, String? startAfterGuestId) async {
+    try {
+      final models = await remote.listGuestsPaged(cardId, limit, startAfterGuestId);
       final guests = models
           .map(
             (m) => GuestEntity(

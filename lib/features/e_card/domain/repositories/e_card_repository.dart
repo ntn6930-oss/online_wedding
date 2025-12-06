@@ -11,10 +11,13 @@ abstract class ECardRepository {
     CreateNewCardParams params,
   );
   Future<Either<Failure, WeddingCardEntity>> getCardById(String cardId);
+  Future<Either<Failure, List<WeddingCardEntity>>> listCardsByOwner(String ownerUid);
+  Future<Either<Failure, List<WeddingCardEntity>>> listCardsByOwnerPaged(String ownerUid, int limit, DateTime? startAfterDate);
   Future<Either<Failure, Unit>> registerSlug(String slug, String cardId);
   Future<Either<Failure, WeddingCardEntity>> getCardBySlug(String slug);
   Future<Either<Failure, Unit>> addGuest(String cardId, GuestEntity guest);
   Future<Either<Failure, List<GuestEntity>>> listGuests(String cardId);
+  Future<Either<Failure, List<GuestEntity>>> listGuestsPaged(String cardId, int limit, String? startAfterGuestId);
   Future<Either<Failure, Unit>> setPublicStatus(String cardId, bool isPublic);
   Future<Either<Failure, bool>> getPublicStatus(String cardId);
   Future<Either<Failure, Unit>> saveCustomization(String cardId, CardCustomizationEntity customization);
