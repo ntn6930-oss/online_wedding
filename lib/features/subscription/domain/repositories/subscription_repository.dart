@@ -6,11 +6,15 @@ class SubscriptionPlan {
   final String name;
   final double price;
   final String period;
+  final String currency;
+  final String? priceId;
   const SubscriptionPlan({
     required this.planId,
     required this.name,
     required this.price,
     required this.period,
+    this.currency = 'usd',
+    this.priceId,
   });
 }
 
@@ -33,12 +37,16 @@ class InvoiceItem {
   final String note;
   final double amount;
   final DateTime createdAt;
+  final String? status;
+  final String? transactionId;
   const InvoiceItem({
     required this.invoiceId,
     required this.ownerUid,
     required this.note,
     required this.amount,
     required this.createdAt,
+    this.status,
+    this.transactionId,
   });
 }
 
@@ -49,4 +57,3 @@ abstract class SubscriptionRepository {
   Future<Either<Failure, Unit>> addInvoice(String ownerUid, double amount, String note);
   Future<Either<Failure, List<InvoiceItem>>> listInvoices(String ownerUid, {int limit = 20});
 }
-

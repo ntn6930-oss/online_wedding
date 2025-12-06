@@ -1,0 +1,89 @@
+Builder
+
+Used 1 context
+
+lib\features\e_card\presentation\widgets\components\gift_box_section.dart
+
+Thought
+
+gift_box_section.dart
+lib\features\e_card\presentation\widgets\components\gift_box_section.dart
+
++ 1 - 0
+
+Open Diff
+
+Sửa Lỗi GiftBoxSection
+
+- Nguyên nhân: GiftBoxSection được chuyển sang ConsumerWidget nhưng file không import Riverpod, khiến lớp không kế thừa đúng Widget .
+- Sửa: thêm import Riverpod để ConsumerWidget hợp lệ:
+  - lib/features/e_card/presentation/widgets/components/gift_box_section.dart:2
+Xác Nhận
+
+- WeddingTemplateWrapper có thể thêm GiftBoxSection vào children: <Widget>[] bình thường:
+  - lib/features/e_card/presentation/widgets/wedding_template_wrapper.dart:84
+Lỗi Khác Đã Xử Lý Trước
+
+- PublicCard countdown dùng i18n keys và đúng kiểu Riverpod:
+  - lib/features/e_card/presentation/pages/public_card_slug_page.dart:96
+- HomePage analytics type mismatch được fix:
+  - lib/core/analytics/analytics.dart:1
+  - lib/features/home/presentation/pages/home_page.dart:372 , 397 , 448 , 465
+Nếu vẫn còn lỗi ở wrapper sau khi build lại, báo mình biết vị trí cụ thể. Mình có thể tiếp tục áp dụng i18n cho các phần RSVP trong RsvpSection và các nhãn khác trên PublicCard ngay lập tức.
+
+ntn6930-oss
+
+đề xuất tiếp theo để nâng cáp app/web của tôi
+
+Builder
+
+Thought process
+
+Hiệu Năng & Quy Mô
+
+- Bật Cloud CDN cho Firebase Hosting/Storage; phân phối ảnh qua CDN, cấu hình cache-control phù hợp cho images .
+- Tạo thumbnail server-side bằng Cloud Functions khi upload; chuẩn hóa kích thước hiển thị (grid/lazy-load).
+- Deferred loading cho Flutter web: tách module hiếm dùng (Template Library, Admin) để giảm tải ban đầu.
+- Giảm payload ảnh công khai bằng responsive sizes; nén client 85%, maxWidth ~1280 với ảnh lớn, giữ bản gốc trong Storage.
+- Thêm chỉ mục Firestore tổng hợp (where + orderBy) cho truy vấn phân trang thiệp/khách mời; tránh full scan.
+Dữ Liệu & Quy Tắc
+
+- Hoàn thiện Firestore/Storage rules theo ownerUid :
+  - Chỉ cho phép users/<uid>/cards/<cardId>/... do đúng uid truy cập.
+  - Ràng buộc tạo/thay đổi thiệp chỉ khi auth.uid trùng ownerUid .
+- Cloud Functions bảo vệ:
+  - Kiểm tra tính hợp lệ slug (duy nhất, chuẩn hóa), cập nhật atomically.
+  - Rate limit các endpoint công khai (RSVP, lời chúc), thêm reCAPTCHA cho form công khai.
+UI/UX
+
+- Skeleton/loading shimmer cho danh sách thiệp/khách mời; tối ưu cảm nhận tải.
+- Infinite scroll (hoặc “Tải thêm”) cho Template Library và Guests Panel, giữ limit chọn nhanh.
+- Thêm quick actions trên HomePage: “Use this template” đã có; bổ sung “View demo” và “Share”.
+- Lưu trạng thái UI (ngôn ngữ, theme) vào SharedPreferences cho khách; người dùng đăng nhập lưu vào users/<uid> .
+Đa Ngôn Ngữ
+
+- Hoàn tất i18n cho RSVP forms, toàn bộ nhãn PublicCard và Admin:
+  - Tạo key cho mọi text cứng; dùng t('key') thống nhất.
+- Persist lựa chọn ngôn ngữ:
+  - Đọc từ users/<uid>.lang sau đăng nhập; fallback SharedPreferences khi chưa đăng nhập.
+- Thêm flutter_localizations và localizationsDelegates , supportedLocales: [Locale('en'), Locale('vi')] để đồng bộ format ngày/giờ.
+Quan Sát & Phân Tích
+
+- Bật Crashlytics/Performance Monitoring; gắn sự kiện chính:
+  - language_changed , view_template , use_template , rsvp_submit , card_publish , image_upload .
+- Xuất sự kiện sang BigQuery (nếu dùng GA4) hoặc tập hợp bằng Cloud Functions theo lịch, tạo dashboard (ví dụ Google Data Studio).
+SEO & PWA
+
+- Hoàn thiện thẻ Open Graph/Twitter Cards cho trang công khai (tiêu đề, mô tả, ảnh preview).
+- Kiểm tra service worker/build của Flutter web; cấu hình precache hợp lý cho trang chủ/template preview.
+- Thêm sitemap (Hosting) cho các slug công khai, endpoint cập nhật sitemap khi tạo thiệp.
+DevOps & QA
+
+- Thiết lập CI: chạy flutter analyze , flutter test , build web/app; dùng Firebase Emulator cho test repository.
+- CD: deploy staging/production lên Firebase Hosting; dùng preview channels cho QA.
+- Test tự động: unit cho controller phân trang (cards/guests), integration cho upload ảnh và tạo thiệp.
+Thanh Toán & Kế Hoạch
+
+- Tích hợp Stripe/PayOS cho billing thực tế; tạo invoice với trạng thái/transactionId.
+- Gating premium: kiểm tra planId trước khi bật các tính năng premium (album lớn, family info, gift box, RSVP nâng cao).
+- Dự phòng chargeback/webhook: Cloud Functions xử lý webhook, cập nhật plan/an invoice an toàn.

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:online_wedding/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:online_wedding/core/localization/localization.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) => throw UnimplementedError());
 
@@ -71,8 +72,12 @@ class SubscriptionPage extends ConsumerWidget {
                                 onPressed: () async {
                                   final uid = ref.read(_authProvider).currentUser?.uid ?? '';
                                   if (uid.isEmpty) return;
-                                  await ref.read(subscriptionRepositoryProvider).setUserPlan(uid, p.planId);
-                                  ref.refresh(_subProvider);
+                                  final callable = FirebaseFunctions.instance.httpsCallable('createCheckoutSession');
+                                  final res = await callable.call({'planId': p.planId});
+                                  final url = (res.data ?? {})['sessionUrl'] ?? '';
+                                  if (url is String && url.isNotEmpty) {
+                                    Navigator.of(context).pushNamed('/checkout', arguments: {'url': url});
+                                  }
                                 },
                                 child: Text(t('subscription.choose')),
                               ),
@@ -94,7 +99,15 @@ class SubscriptionPage extends ConsumerWidget {
                     .map(
                       (iv) => ListTile(
                         title: Text('${t('subscription.amount')}: ${iv.amount}'),
-                        subtitle: Text('${t('subscription.note')}: ${iv.note}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${t('subscription.note')}: ${iv.note}'),
+                            if (iv.status != null) Text('${t('invoice.status')}: ${iv.status}'),
+                            if (iv.transactionId != null && iv.transactionId!.isNotEmpty)
+                              Text('${t('invoice.txid')}: ${iv.transactionId}'),
+                          ],
+                        ),
                         trailing: Text('${t('subscription.date')}: ${iv.createdAt.toIso8601String()}'),
                       ),
                     )

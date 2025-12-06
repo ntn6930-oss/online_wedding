@@ -1,0 +1,17 @@
+{
+  "name": "online-wedding-functions",
+  "private": true,
+  "engines": {"node": ">=18"},
+  "scripts": {
+    "seed:plans": "node seed_plans.js"
+  },
+  "dependencies": {
+    "firebase-functions": "^4.4.1",
+    "firebase-admin": "^12.5.0",
+    "sharp": "^0.33.3",
+    "stripe": "^16.0.0",
+    "speakeasy": "^2.0.0",
+    "node-fetch": "^3.3.2",
+    "@simplewebauthn/server": "^9.0.0"
+  }
+}

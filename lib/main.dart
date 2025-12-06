@@ -14,18 +14,25 @@ import 'package:online_wedding/features/e_card/presentation/pages/my_cards_page.
 import 'package:online_wedding/features/e_card/data/repositories/template_repository_impl.dart';
 import 'package:online_wedding/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:online_wedding/features/subscription/presentation/pages/subscription_page.dart';
+import 'package:online_wedding/features/subscription/presentation/pages/checkout_page.dart';
+import 'package:online_wedding/features/admin/presentation/pages/admin_control_panel_page.dart';
+import 'package:online_wedding/features/security/presentation/pages/security_settings_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:online_wedding/features/admin/presentation/pages/admin_webauthn_gate.dart';
+import 'package:online_wedding/features/security/presentation/pages/webauthn_register.dart';
 import 'package:online_wedding/firebase_options.dart';
 import 'package:online_wedding/features/e_card/data/datasources/card_remote_data_source_firestore.dart';
-import 'package:online_wedding/features/subscription/domain/repositories/subscription_repository.dart';
+
 import 'package:online_wedding/features/subscription/data/datasources/subscription_remote_data_source_firestore.dart';
 import 'package:online_wedding/features/subscription/data/repositories/subscription_repository_impl.dart';
 import 'package:online_wedding/features/home/presentation/pages/home_page.dart';
-
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'features/e_card/domain/usecases/list_templates_use_case.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseAppCheck.instance.activate();
   final firestore = FirebaseFirestore.instance;
   firestore.settings = const Settings(
     persistenceEnabled: true,
@@ -116,9 +123,64 @@ class MyApp extends StatelessWidget {
             builder: (_) => const SubscriptionPage(),
           );
         }
+        if (name == '/admin-panel') {
+          return MaterialPageRoute(
+            builder: (_) => const _AdminGuardPage(),
+          );
+        }
+        if (name == '/security') {
+          return MaterialPageRoute(
+            builder: (_) => const SecuritySettingsPage(),
+          );
+        }
+        if (name == '/security/webauthn-register') {
+          return MaterialPageRoute(
+            builder: (_) => const WebAuthnRegisterPage(),
+          );
+        }
+        if (name == '/checkout') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final url = (args?['url'] as String?) ?? '';
+          return MaterialPageRoute(
+            builder: (_) => CheckoutPage(sessionUrl: url),
+          );
+        }
         return MaterialPageRoute(
           builder: (_) => const HomePage(),
         );
+      },
+    );
+  }
+}
+
+class _AdminGuardPage extends StatefulWidget {
+  const _AdminGuardPage();
+  @override
+  State<_AdminGuardPage> createState() => _AdminGuardPageState();
+}
+
+class _AdminGuardPageState extends State<_AdminGuardPage> {
+  Future<bool> _check() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    final res = await user.getIdTokenResult(true);
+    final claims = res.claims ?? {};
+    final isAdmin = (claims['admin'] as bool?) ?? false;
+    final hasMfa = (claims['mfa'] as bool?) ?? false;
+    return isAdmin && hasMfa;
+  }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _check(),
+      builder: (_, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(body: SizedBox.shrink());
+        }
+        if (snap.data == true) {
+          return const AdminWebAuthnGatePage();
+        }
+        return const Scaffold(body: SizedBox.shrink());
       },
     );
   }

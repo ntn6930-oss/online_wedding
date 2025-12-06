@@ -1,0 +1,20 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "ownerUid", "order": "ASCENDING"},
+        {"fieldPath": "date", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "guests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "guestId", "order": "ASCENDING"}
+      ]
+    }
+  ]
+}
+

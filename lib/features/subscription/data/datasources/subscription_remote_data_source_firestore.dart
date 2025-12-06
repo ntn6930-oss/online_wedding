@@ -17,9 +17,9 @@ class FirestoreSubscriptionRemoteDataSource implements SubscriptionRemoteDataSou
     final qs = await db.collection('plans').get();
     if (qs.docs.isEmpty) {
       return const [
-        SubscriptionPlan(planId: 'free', name: 'Free', price: 0, period: 'monthly'),
-        SubscriptionPlan(planId: 'basic', name: 'Basic', price: 5.0, period: 'monthly'),
-        SubscriptionPlan(planId: 'premium', name: 'Premium', price: 15.0, period: 'monthly'),
+        SubscriptionPlan(planId: 'free', name: 'Free', price: 0, period: 'monthly', currency: 'usd'),
+        SubscriptionPlan(planId: 'basic', name: 'Basic', price: 5.0, period: 'monthly', currency: 'usd'),
+        SubscriptionPlan(planId: 'premium', name: 'Premium', price: 15.0, period: 'monthly', currency: 'usd'),
       ];
     }
     return qs.docs.map((d) {
@@ -29,6 +29,8 @@ class FirestoreSubscriptionRemoteDataSource implements SubscriptionRemoteDataSou
         name: (m['name'] as String?) ?? d.id,
         price: ((m['price'] as num?) ?? 0).toDouble(),
         period: (m['period'] as String?) ?? 'monthly',
+        currency: (m['currency'] as String?) ?? 'usd',
+        priceId: m['priceId'] as String?,
       );
     }).toList();
   }
@@ -85,8 +87,9 @@ class FirestoreSubscriptionRemoteDataSource implements SubscriptionRemoteDataSou
         note: (m['note'] as String?) ?? '',
         amount: (m['amount'] as num).toDouble(),
         createdAt: DateTime.parse(m['createdAt'] as String),
+        status: m['status'] as String?,
+        transactionId: m['transactionId'] as String?,
       );
     }).toList();
   }
 }
-

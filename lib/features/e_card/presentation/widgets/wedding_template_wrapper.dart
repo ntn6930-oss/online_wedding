@@ -88,7 +88,7 @@ class WeddingTemplateWrapper extends ConsumerWidget {
             groomData: '${card.coupleName} ${card.cardId} groom',
           ),
         if (card.isPremium && enableRsvp)
-          const RsvpSection(),
+          RsvpSection(cardId: card.cardId),
       ],
     );
   }

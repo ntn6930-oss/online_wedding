@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    function isOwner(doc) {
+      return isSignedIn() && doc.data.ownerUid == request.auth.uid;
+    }
+    match /cards/{cardId} {
+      allow read: if resource.data.isPublic == true || isOwner(resource);
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isOwner(resource);
+
+      match /guests/{guestId} {
+        allow read: if resource.parent.data.isPublic == true || isOwner(resource.parent);
+        allow create: if resource.parent.data.isPublic == true || isOwner(resource.parent);
+        allow update, delete: if isOwner(resource.parent);
+      }
+    }
+    match /subscriptions/{uid} {
+      allow read, write: if isSignedIn() && uid == request.auth.uid;
+    }
+    match /invoices/{id} {
+      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow write: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+    }
+    match /events/{eventId} {
+      allow create: if true;
+      allow read: if isSignedIn();
+    }
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && uid == request.auth.uid;
+    }
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.token.admin == true;
+    }
+  }
+}
