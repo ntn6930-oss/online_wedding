@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:online_wedding/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) => throw UnimplementedError());
 
@@ -33,16 +34,17 @@ class SubscriptionPage extends ConsumerWidget {
     final plans = ref.watch(_plansProvider);
     final sub = ref.watch(_subProvider);
     final invoices = ref.watch(_invoicesProvider);
+    final t = ref.watch(tProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Gói dịch vụ')),
+      appBar: AppBar(title: Text(t('subscription.title'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             sub.when(
               data: (s) => s == null
-                  ? const Text('Chưa đăng nhập hoặc chưa chọn gói')
-                  : Text('Gói hiện tại: ${s.planId}'),
+                  ? Text('${t('subscription.current_plan')}: -')
+                  : Text('${t('subscription.current_plan')}: ${s.planId}'),
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => const SizedBox.shrink(),
             ),
@@ -72,7 +74,7 @@ class SubscriptionPage extends ConsumerWidget {
                                   await ref.read(subscriptionRepositoryProvider).setUserPlan(uid, p.planId);
                                   ref.refresh(_subProvider);
                                 },
-                                child: const Text('Chọn gói'),
+                                child: Text(t('subscription.choose')),
                               ),
                             ],
                           ),
@@ -85,15 +87,15 @@ class SubscriptionPage extends ConsumerWidget {
               error: (e, _) => const SizedBox.shrink(),
             ),
             const SizedBox(height: 12),
-            const Text('Hóa đơn gần đây'),
+            Text(t('subscription.recent_invoices')),
             invoices.when(
               data: (list) => Column(
                 children: list
                     .map(
                       (iv) => ListTile(
-                        title: Text('${iv.amount}'),
-                        subtitle: Text(iv.note),
-                        trailing: Text(iv.createdAt.toIso8601String()),
+                        title: Text('${t('subscription.amount')}: ${iv.amount}'),
+                        subtitle: Text('${t('subscription.note')}: ${iv.note}'),
+                        trailing: Text('${t('subscription.date')}: ${iv.createdAt.toIso8601String()}'),
                       ),
                     )
                     .toList(),

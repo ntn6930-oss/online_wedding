@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_wedding/features/e_card/domain/entities/wedding_card_entity.dart';
 import 'package:online_wedding/features/e_card/domain/usecases/get_card_by_slug_use_case.dart';
 import 'package:online_wedding/features/e_card/domain/entities/card_customization_entity.dart';
-import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
 import 'package:online_wedding/core/web/seo.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 import '../../domain/usecases/create_new_card_use_case.dart';
 
@@ -16,15 +16,16 @@ class PublicCardBySlugPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_cardBySlugProvider(slug));
+    final t = ref.watch(tProvider);
     return Scaffold(
       appBar: AppBar(title: Text(slug)),
       body: state.when(
         data: (card) {
-          Seo.setMeta(title: card.coupleName, description: 'Thiệp cưới của ${card.coupleName}');
+          Seo.setMeta(title: card.coupleName, description: '${t('public.seo_desc')} ${card.coupleName}');
           return _CardBody(card: card);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => const Center(child: Text('Không tìm thấy thiệp')),
+        error: (e, _) => const Center(child: Text('Not found')),
       ),
     );
   }
@@ -75,7 +76,7 @@ class _CardBody extends ConsumerWidget {
               const SizedBox(height: 16),
             ],
             if ((c?.showAlbum ?? false) && list.isNotEmpty) ...[
-              Text('Album ảnh', style: style.titleMedium?.copyWith(color: Colors.white, fontFamily: c?.font)),
+              Text(('album.title'), style: style.titleMedium?.copyWith(color: Colors.white, fontFamily: c?.font)),
               const SizedBox(height: 8),
               _AlbumGrid(images: list.cast<String>()),
             ],
@@ -86,17 +87,18 @@ class _CardBody extends ConsumerWidget {
   }
 }
 
-class _Countdown extends StatelessWidget {
+class _Countdown extends ConsumerWidget {
   final DateTime target;
   final TextStyle style;
   const _Countdown({required this.target, required this.style});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(tProvider);
     final d = target.difference(DateTime.now());
     final days = d.inDays;
     final hours = d.inHours % 24;
     final mins = d.inMinutes % 60;
-    return Text('$days ngày • $hours giờ • $mins phút', style: style);
+    return Text('$days ${t('countdown.days')} • $hours ${t('countdown.hours')} • $mins ${t('countdown.minutes')}', style: style);
   }
 }
 
@@ -139,4 +141,3 @@ Color _parseHex(String hex) {
   final v = int.parse('FF$h', radix: 16);
   return Color(v);
 }
-

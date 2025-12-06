@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:online_wedding/features/e_card/domain/entities/card_customization_entity.dart';
 import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 import '../../domain/usecases/create_new_card_use_case.dart';
 
@@ -52,6 +53,7 @@ class DesignCustomizationPage extends ConsumerWidget {
   const DesignCustomizationPage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(tProvider);
     final state = ref.watch(customizationProvider);
     final fonts = ['Default', 'Serif', 'Sans', 'Monospace'];
     final colors = [
@@ -62,12 +64,12 @@ class DesignCustomizationPage extends ConsumerWidget {
       Colors.green,
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Tùy chỉnh thiết kế')),
+      appBar: AppBar(title: Text(t('design.preview'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            Text('Màu chủ đạo'),
+            Text('Primary color'),
             Wrap(
               spacing: 8,
               children: colors.map((c) {
@@ -88,7 +90,7 @@ class DesignCustomizationPage extends ConsumerWidget {
               }).toList(),
             ),
             const SizedBox(height: 16),
-            Text('Font chữ'),
+            Text('Font'),
             DropdownButton<String>(
               value: state.font,
               items: fonts
@@ -103,19 +105,19 @@ class DesignCustomizationPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Bản đồ'),
+              title: Text(t('design.map')),
               value: state.showMap,
               onChanged: (v) => ref.read(customizationProvider.notifier).state =
                   state.copyWith(showMap: v),
             ),
             SwitchListTile(
-              title: const Text('Album ảnh'),
+              title: Text(t('design.album')),
               value: state.showAlbum,
               onChanged: (v) => ref.read(customizationProvider.notifier).state =
                   state.copyWith(showAlbum: v),
             ),
             SwitchListTile(
-              title: const Text('Đếm ngược'),
+              title: Text(t('design.countdown')),
               value: state.showCountdown,
               onChanged: (v) => ref.read(customizationProvider.notifier).state =
                   state.copyWith(showCountdown: v),
@@ -129,7 +131,7 @@ class DesignCustomizationPage extends ConsumerWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                'Xem trước',
+                t('design.preview'),
                 style: TextStyle(
                   color: state.primaryColor,
                   fontWeight: FontWeight.bold,
@@ -150,8 +152,9 @@ class DesignCustomizationPageWithId extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(customizationProvider);
     final images = ref.watch(_imagesProvider(cardId));
+    final t = ref.watch(tProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Tùy chỉnh thiết kế')),
+      appBar: AppBar(title: Text(t('design.preview'))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
@@ -173,7 +176,7 @@ class DesignCustomizationPageWithId extends ConsumerWidget {
                     ) as CardCustomizationEntity,
                   );
                 },
-                child: const Text('Lưu thiết kế'),
+                child: Text('Save design'),
               ),
               const SizedBox(width: 12),
               ElevatedButton(
@@ -188,7 +191,7 @@ class DesignCustomizationPageWithId extends ConsumerWidget {
                     ref.refresh(_imagesProvider(cardId));
                   }
                 },
-                child: const Text('Tải ảnh lên'),
+                child: Text(t('album.upload')),
               ),
             ]),
             const SizedBox(height: 16),

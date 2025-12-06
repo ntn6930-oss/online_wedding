@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
-class GiftBoxSection extends StatelessWidget {
+class GiftBoxSection extends ConsumerWidget {
   final String brideLabel;
   final String groomLabel;
   final String brideData;
@@ -14,13 +16,14 @@ class GiftBoxSection extends StatelessWidget {
     required this.groomData,
   });
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(tProvider);
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Hộp quà', style: Theme.of(context).textTheme.titleMedium),
+          Text(t('gift.box'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -56,4 +59,3 @@ class _GiftCard extends StatelessWidget {
     );
   }
 }
-

@@ -5,6 +5,7 @@ import 'package:online_wedding/features/e_card/domain/usecases/get_card_by_id_us
 import 'package:online_wedding/features/e_card/domain/entities/card_customization_entity.dart';
 import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 import 'package:online_wedding/features/e_card/presentation/widgets/template_factory.dart';
 import '../../domain/usecases/create_new_card_use_case.dart';
 
@@ -122,15 +123,15 @@ class _AlbumGrid extends StatelessWidget {
   }
 }
 
-class _Countdown extends StatefulWidget {
+class _Countdown extends ConsumerStatefulWidget {
   final DateTime target;
   final TextStyle style;
   const _Countdown({required this.target, required this.style});
   @override
-  State<_Countdown> createState() => _CountdownState();
+  ConsumerState<_Countdown> createState() => _CountdownState();
 }
 
-class _CountdownState extends State<_Countdown> {
+class _CountdownState extends ConsumerState<_Countdown> {
   late Duration remaining;
   @override
   void initState() {
@@ -139,11 +140,12 @@ class _CountdownState extends State<_Countdown> {
   }
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(tProvider);
     String fmt(Duration d) {
       final days = d.inDays;
       final hours = d.inHours % 24;
       final mins = d.inMinutes % 60;
-      return '$days ngày • $hours giờ • $mins phút';
+      return '$days ${t('countdown.days')} • $hours ${t('countdown.hours')} • $mins ${t('countdown.minutes')}';
     }
     return Text(fmt(remaining), style: widget.style);
   }

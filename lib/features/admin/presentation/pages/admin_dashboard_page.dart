@@ -6,6 +6,7 @@ import 'package:online_wedding/features/e_card/domain/usecases/get_card_by_id_us
 import 'package:online_wedding/features/e_card/domain/usecases/register_slug_use_case.dart';
 import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 import '../../../e_card/domain/usecases/create_new_card_use_case.dart';
 
@@ -15,21 +16,22 @@ class AdminDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(tProvider);
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Manage Invitation'),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Guests'),
-            Tab(text: 'Gifts'),
-            Tab(text: 'Messages'),
+          title: Text(t('admin.manage')),
+          bottom: TabBar(tabs: [
+            Tab(text: t('admin.tabs.guests')),
+            Tab(text: t('admin.tabs.gifts')),
+            Tab(text: t('admin.tabs.messages')),
           ]),
         ),
         body: TabBarView(children: [
           GuestsTab(cardId: cardId),
           PublishTab(cardId: cardId),
-          const _PlaceholderTab(label: 'Messages'),
+          _PlaceholderTab(label: t('admin.tabs.messages')),
         ]),
       ),
     );
@@ -96,18 +98,19 @@ class _AddGuestFormState extends ConsumerState<_AddGuestForm> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(tProvider);
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Guest name')),
+          TextField(controller: _nameCtrl, decoration: InputDecoration(labelText: 'Guest name')),
           Row(children: [
             Expanded(child: SwitchListTile(title: const Text('Invited'), value: _invited, onChanged: (v){setState(()=>_invited=v);})),
             Expanded(child: SwitchListTile(title: const Text('Attended'), value: _attended, onChanged: (v){setState(()=>_attended=v);})),
           ]),
           Row(children: [
             Expanded(child: TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Gift amount'), onChanged: (v){_gift = double.tryParse(v)??0;})),
-            ElevatedButton(onPressed: _addGuest, child: const Text('Add')),
+            ElevatedButton(onPressed: _addGuest, child: Text(t('guests.add'))),
           ]),
         ],
       ),
@@ -137,6 +140,7 @@ class PublishTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cardState = ref.watch(_cardProvider(cardId));
     final isPublicState = ref.watch(_publicProvider(cardId));
+    final t = ref.watch(tProvider);
     return cardState.when(
       data: (card) {
         final slugCtrl = TextEditingController();
@@ -148,7 +152,7 @@ class PublishTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                const Text('Công khai'),
+                Text(t('admin.public')),
                 const SizedBox(width: 12),
                 Switch(
                   value: currentPublic,
@@ -163,7 +167,7 @@ class PublishTab extends ConsumerWidget {
                 Expanded(
                   child: TextField(
                     controller: slugCtrl,
-                    decoration: const InputDecoration(labelText: 'Slug cặp đôi'),
+                    decoration: InputDecoration(labelText: t('admin.slug')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -174,11 +178,11 @@ class PublishTab extends ConsumerWidget {
                       await ref.read(registerSlugUseCaseProvider).call(RegisterSlugParams(slug: slug, cardId: cardId));
                     }
                   },
-                  child: const Text('Lưu slug'),
+                  child: Text(t('admin.save_slug')),
                 ),
               ]),
               const SizedBox(height: 16),
-              Text('QR theo đường dẫn mặc định'),
+              Text(t('admin.qr_default')),
               const SizedBox(height: 8),
               QrImageView(data: urlById, size: 160),
             ],

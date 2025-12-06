@@ -19,6 +19,7 @@ import 'package:online_wedding/features/e_card/data/datasources/card_remote_data
 import 'package:online_wedding/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:online_wedding/features/subscription/data/datasources/subscription_remote_data_source_firestore.dart';
 import 'package:online_wedding/features/subscription/data/repositories/subscription_repository_impl.dart';
+import 'package:online_wedding/features/home/presentation/pages/home_page.dart';
 
 import 'features/e_card/domain/usecases/list_templates_use_case.dart';
 
@@ -50,15 +51,15 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Online Wedding E-Card',
+      title: 'Wedding E-Card',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
         useMaterial3: true,
       ),
+      supportedLocales: const [Locale('en'), Locale('vi')],
       onGenerateRoute: (settings) {
         final name = settings.name ?? '';
         final parts = name.split('/').where((e) => e.isNotEmpty).toList();
@@ -116,7 +117,7 @@ class MyApp extends StatelessWidget {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => const CreateCardPage(),
+          builder: (_) => const HomePage(),
         );
       },
     );

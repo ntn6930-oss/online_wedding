@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_wedding/features/e_card/domain/entities/template_entity.dart';
 import 'package:online_wedding/features/e_card/domain/usecases/list_templates_use_case.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 final _categoryFilterProvider = StateProvider<String?>((ref) => null);
 final _queryProvider = StateProvider<String>((ref) => '');
 final _videoOnlyProvider = StateProvider<bool>((ref) => false);
+final _idFilterProvider = StateProvider<String?>((ref) => null);
 
 final _templatesProvider = FutureProvider<List<TemplateEntity>>((ref) async {
   final usecase = ref.read(listTemplatesUseCaseProvider);
@@ -14,12 +16,20 @@ final _templatesProvider = FutureProvider<List<TemplateEntity>>((ref) async {
 });
 
 class TemplateLibraryPage extends ConsumerWidget {
-  const TemplateLibraryPage({super.key});
+  final String? initialTemplateId;
+  const TemplateLibraryPage({super.key, this.initialTemplateId});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(_templatesProvider);
+    if (initialTemplateId != null &&
+        ref.read(_idFilterProvider) != initialTemplateId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(_idFilterProvider.notifier).state = initialTemplateId;
+      });
+    }
+    final t = ref.watch(tProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Thư viện Mẫu Thiệp')),
+      appBar: AppBar(title: Text(t('templates.title'))),
       body: Column(
         children: [
           TemplateFilterBar(),
@@ -77,13 +87,15 @@ class TemplateGrid extends ConsumerWidget {
     final cat = ref.watch(_categoryFilterProvider);
     final q = ref.watch(_queryProvider).toLowerCase();
     final videoOnly = ref.watch(_videoOnlyProvider);
+    final id = ref.watch(_idFilterProvider);
     return state.when(
       data: (list) {
         final filtered = list.where((t) {
+          final okId = id == null || t.templateId == id;
           final okCat = cat == null || t.category == cat;
           final okQ = q.isEmpty || t.name.toLowerCase().contains(q);
           final okVideo = !videoOnly || t.hasVideo;
-          return okCat && okQ && okVideo;
+          return okId && okCat && okQ && okVideo;
         }).toList();
         return GridView.builder(
           padding: const EdgeInsets.all(12),

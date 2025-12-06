@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:online_wedding/features/e_card/domain/entities/wedding_card_entity.dart';
 import 'package:online_wedding/features/e_card/domain/repositories/e_card_repository.dart';
 import 'package:online_wedding/features/e_card/domain/entities/guest_entity.dart';
+import 'package:online_wedding/core/localization/localization.dart';
 
 import '../../domain/usecases/create_new_card_use_case.dart';
 
@@ -55,13 +56,14 @@ class MyCardsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cards = ref.watch(myCardsControllerProvider);
+    final t = ref.watch(tProvider);
     ref.read(myCardsControllerProvider.notifier).loadInitial();
     return Scaffold(
-      appBar: AppBar(title: const Text('Thiệp của tôi')),
+      appBar: AppBar(title: Text(t('my_cards.title'))),
       body: cards.when(
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Chưa có thiệp'));
+            return Center(child: Text('No cards'));
           }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
@@ -71,7 +73,7 @@ class MyCardsPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Lỗi: $e')),
+        error: (e, _) => Center(child: Text('${t('common.error')}: $e')),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(12),
@@ -79,7 +81,7 @@ class MyCardsPage extends ConsumerWidget {
           children: [
             ElevatedButton(
               onPressed: () => ref.read(myCardsControllerProvider.notifier).loadMore(),
-              child: const Text('Tải thêm'),
+              child: Text(t('common.load_more')),
             ),
             const SizedBox(width: 12),
             DropdownButton<int>(
@@ -188,6 +190,7 @@ class _GuestsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final guests = ref.watch(guestsControllerProvider(cardId));
+    final t = ref.watch(tProvider);
     ref.read(guestsControllerProvider(cardId).notifier).loadInitial();
     final nameCtrl = TextEditingController();
     final invitedCtrl = ValueNotifier<bool>(false);
@@ -199,7 +202,7 @@ class _GuestsPanel extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Khách mời • Tổng quà: $total'),
+            Text('${t('guests.title')} • ${t('guests.total_gift')}: $total'),
             const SizedBox(height: 8),
             Row(children: [
               Expanded(child: TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Tên'))),
@@ -234,7 +237,7 @@ class _GuestsPanel extends ConsumerWidget {
                   await repo.addGuest(cardId, g);
                   await ref.read(guestsControllerProvider(cardId).notifier).loadInitial();
                 },
-                child: const Text('Thêm'),
+                child: Text(t('guests.add')),
               ),
             ]),
             const SizedBox(height: 8),
@@ -254,7 +257,7 @@ class _GuestsPanel extends ConsumerWidget {
             Row(children: [
               ElevatedButton(
                 onPressed: () => ref.read(guestsControllerProvider(cardId).notifier).loadMore(),
-                child: const Text('Tải thêm'),
+                child: Text(t('common.load_more')),
               ),
               const SizedBox(width: 12),
               DropdownButton<int>(
@@ -273,7 +276,7 @@ class _GuestsPanel extends ConsumerWidget {
         );
       },
       loading: () => const LinearProgressIndicator(),
-      error: (e, _) => Text('Lỗi khách mời: $e'),
+      error: (e, _) => Text('${t('common.error')} guests: $e'),
     );
   }
 }
@@ -290,10 +293,11 @@ class _AlbumPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final images = ref.watch(_imagesProvider2(cardId));
+    final t = ref.watch(tProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Ảnh cưới'),
+        Text(t('album.title')),
         const SizedBox(height: 8),
         Row(children: [
           ElevatedButton(
@@ -311,7 +315,7 @@ class _AlbumPanel extends ConsumerWidget {
                 ref.refresh(_imagesProvider2(cardId));
               }
             },
-            child: const Text('Tải ảnh lên'),
+            child: Text(t('album.upload')),
           ),
         ]),
         const SizedBox(height: 8),
@@ -331,7 +335,7 @@ class _AlbumPanel extends ConsumerWidget {
             ),
           ),
           loading: () => const LinearProgressIndicator(),
-          error: (e, _) => Text('Lỗi ảnh: $e'),
+          error: (e, _) => Text('${t('common.error')}: $e'),
         ),
       ],
     );
